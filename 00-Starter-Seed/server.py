@@ -45,7 +45,7 @@ def requires_auth(f):
     try:
         payload = jwt.decode(
             token,
-            base64.b64decode(client_secret.replace("_","/").replace("-","+")),
+            client_secret,
             audience=client_id
         )
     except jwt.ExpiredSignature:
