@@ -1,5 +1,4 @@
 import jwt
-import base64
 import os
 
 from functools import wraps
