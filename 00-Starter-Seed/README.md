@@ -12,8 +12,8 @@ For that, if you just create a file named `.env` in the directory and set the va
 
 ```bash
 # .env file
-AUTH0_CLIENT_SECRET=myCoolSecret
-AUTH0_CLIENT_ID=myCoolClientId
+AUTH0_CLIENT_SECRET=YOUR_CLIENT_SECRET
+AUTH0_CLIENT_ID=YOUR_CLIENT_ID
 ```
 
 Once you've set those 2 enviroment variables:
