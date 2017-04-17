@@ -1,7 +1,5 @@
 # Auth0 + Python + Flask API Seed
-This is the seed project you need to use if you're going to create a Python + Flask API. You'll mostly use this API either for a SPA or a Mobile app. If you just want to create a Regular Python WebApp, please check [this other seed project](https://github.com/auth0-samples/auth0-python-web-app/tree/master/00-Starter-Seed/flask-webapp)
-
-This example is deployed at Heroku at http://auth0-python-flaskapi-sample.herokuapp.com/ping
+This is the seed project you need to use if you're going to create a Python + Flask API. You'll mostly use this API either for a SPA or a Mobile app. If you just want to create a Regular Python WebApp, please check [this other seed project](https://github.com/auth0-samples/auth0-python-web-app/tree/master/00-Starter-Seed)
 
 # Running the example
 In order to run the example you need to have `python` and `pip` installed.
@@ -22,4 +20,4 @@ Once you've set those 2 enviroment variables:
 2. Start the server with `python server.py`
 3. Try calling [http://localhost:3001/ping](http://localhost:3001/ping)
 
-You can then try to do a GET to [http://localhost:3001/secured/ping](http://localhost:3001/secured/ping) which will throw an error if you don't send the JWT in the header.
+You can then try to do a GET to [http://localhost:3001/secured/ping](http://localhost:3001/secured/ping) which will throw an error if you don't send the JWT signed using HMAC-SHA256 in the header.
