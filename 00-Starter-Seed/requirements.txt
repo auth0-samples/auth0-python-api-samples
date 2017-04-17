@@ -1,4 +1,4 @@
 flask
 python-dotenv
-PyJWT
+python-jose
 flask-cors
