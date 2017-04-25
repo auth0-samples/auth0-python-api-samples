@@ -20,5 +20,5 @@ Once you've set those 2 enviroment variables:
 2. Start the server with `python server.py`
 3. Try calling [http://localhost:3001/ping](http://localhost:3001/ping)
 
-You can then try to do a GET to [http://localhost:3001/secured/ping](http://localhost:3001/secured/ping) which will throw an error if you don't send an access token signed with RS256 with the appropriate issuer and audience in the Authorization header 
-You can then try to do a GET to [http://localhost:3001/secured/private/ping](http://localhost:3001/secured/private/ping) which will throw an error if you don't send an access token with the scope `read:agenda` signed with RS256 with the appropriate issuer and audience in the Authorization header 
+You can then try to do a GET to [http://localhost:3001/secured/ping](http://localhost:3001/secured/ping) which will throw an error if you don't send an access token signed with RS256 with the appropriate issuer and audience in the Authorization header. You can also try to  
+do a GET to [http://localhost:3001/secured/private/ping](http://localhost:3001/secured/private/ping) which will throw an error if you don't send an access token with the scope `read:agenda` signed with RS256 with the appropriate issuer and audience in the Authorization header.
