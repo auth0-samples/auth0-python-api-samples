@@ -74,7 +74,12 @@ def requires_auth(f):
         token = get_token_auth_header()
         jsonurl = urllib.urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
         jwks = json.loads(jsonurl.read())
-        unverified_header = jwt.get_unverified_header(token)
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+        except jwt.JWTError:
+            return handle_error({"code": "invalid_header",
+                                 "description": "Invalid header. "
+                                                "Use an RS256 signed JWT Access Token"}, 401)
         rsa_key = {}
         for key in jwks["keys"]:
             if key["kid"] == unverified_header["kid"]:
