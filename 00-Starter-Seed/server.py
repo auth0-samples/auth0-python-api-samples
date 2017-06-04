@@ -80,6 +80,10 @@ def requires_auth(f):
             return handle_error({"code": "invalid_header",
                                  "description": "Invalid header. "
                                                 "Use an RS256 signed JWT Access Token"}, 401)
+        if unverified_header["alg"] == "HS256":
+            return handle_error({"code": "invalid_header",
+                                 "description": "Invalid header. "
+                                                "Use an RS256 signed JWT Access Token"}, 401)
         rsa_key = {}
         for key in jwks["keys"]:
             if key["kid"] == unverified_header["kid"]:
