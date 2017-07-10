@@ -14,7 +14,7 @@ from jose import jwt
 load_dotenv(path.join(path.dirname(__file__), ".env"))
 AUTH0_DOMAIN = env["AUTH0_DOMAIN"]
 API_AUDIENCE = env["API_ID"]
-
+ALGORITHMS = ["RS256"]
 APP = Flask(__name__)
 
 
@@ -99,7 +99,7 @@ def requires_auth(f):
                 payload = jwt.decode(
                     token,
                     rsa_key,
-                    algorithms=unverified_header["alg"],
+                    algorithms=ALGORITHMS,
                     audience=API_AUDIENCE,
                     issuer="https://"+AUTH0_DOMAIN+"/"
                 )
@@ -109,11 +109,11 @@ def requires_auth(f):
             except jwt.JWTClaimsError:
                 return handle_error({"code": "invalid_claims",
                                      "description": "incorrect claims,"
-                                                    "please check the audience and issuer"}, 401)
+                                                    " please check the audience and issuer"}, 401)
             except Exception:
                 return handle_error({"code": "invalid_header",
                                      "description": "Unable to parse authentication"
-                                                    "token."}, 400)
+                                                    " token."}, 400)
 
             _app_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
