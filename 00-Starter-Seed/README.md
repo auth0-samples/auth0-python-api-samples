@@ -3,6 +3,8 @@ This is the seed project you need to use if you're going to create a Python + Fl
 If you just want to create a Regular Python WebApp, please
 check [this project](https://github.com/auth0-samples/auth0-python-web-app/tree/master/01-Login)
 
+Please check our [Quickstart](https://auth0.com/docs/quickstart/backend/python) to better understand this sample.
+
 # Running the example
 In order to run the example you need to have `python` and `pip` installed.
 
