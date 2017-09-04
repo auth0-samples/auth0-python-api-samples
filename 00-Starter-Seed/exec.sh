@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-docker build -t auth0-django-01-login .
-docker run --env-file .env -p 8000:8000 -it auth0-django-01-login
+docker build -t auth0-python-api .
+docker run --env-file .env -p 3001:3001 -it auth0-python-api
