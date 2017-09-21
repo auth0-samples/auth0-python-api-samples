@@ -7,7 +7,7 @@ from os import environ as env
 from six.moves.urllib.request import urlopen
 
 from dotenv import load_dotenv, find_dotenv
-from flask import Flask, request, jsonify, _app_ctx_stack
+from flask import Flask, request, jsonify, _request_ctx_stack
 from flask_cors import cross_origin
 from jose import jwt
 
@@ -130,7 +130,7 @@ def requires_auth(f):
                                     "Unable to parse authentication"
                                     " token."}, 400)
 
-            _app_ctx_stack.top.current_user = payload
+            _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
                         "description": "Unable to find appropriate key"}, 400)
