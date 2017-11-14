@@ -9,4 +9,4 @@ RUN pip install -r requirements.txt
 ADD . /home/app
 CMD python server.py
 
-EXPOSE 3001
+EXPOSE 3010
