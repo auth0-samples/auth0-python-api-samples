@@ -15,7 +15,7 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 AUTH0_DOMAIN = env.get("AUTH0_DOMAIN")
-API_AUDIENCE = env.get("API_ID")
+AUTH0_AUDIENCE = env.get("AUTH0_AUDIENCE")
 ALGORITHMS = ["RS256"]
 APP = Flask(__name__)
 
@@ -113,7 +113,7 @@ def requires_auth(f):
                     token,
                     rsa_key,
                     algorithms=ALGORITHMS,
-                    audience=API_AUDIENCE,
+                    audience=AUTH0_AUDIENCE,
                     issuer="https://"+AUTH0_DOMAIN+"/"
                 )
             except jwt.ExpiredSignatureError:
@@ -169,4 +169,4 @@ def secured_private_ping():
 
 
 if __name__ == "__main__":
-    APP.run(host="0.0.0.0", port=env.get("PORT", 3001))
+    APP.run(host="0.0.0.0", port=env.get("PORT", 3010))

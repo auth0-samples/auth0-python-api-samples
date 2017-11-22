@@ -25,16 +25,16 @@ Once you've set those 2 enviroment variables:
 
 1. Install the needed dependencies with `pip install -r requirements.txt`
 2. Start the server with `python server.py`
-3. Try calling [http://localhost:3001/ping](http://localhost:3001/ping)
+3. Try calling [http://localhost:3010/ping](http://localhost:3010/ping)
 
 # Testing the API
 
-You can then try to do a GET to [http://localhost:3001/secured/ping](http://localhost:3001/secured/ping) which will
+You can then try to do a GET to [http://localhost:3010/secured/ping](http://localhost:3010/secured/ping) which will
 throw an error if you don't send an access token signed with RS256 with the appropriate issuer and audience in the
 Authorization header. 
 
 You can also try to do a GET to 
-[http://localhost:3001/secured/private/ping](http://localhost:3001/secured/private/ping) which will throw an error if
+[http://localhost:3010/secured/private/ping](http://localhost:3010/secured/private/ping) which will throw an error if
 you don't send an access token with the scope `read:agenda` signed with RS256 with the appropriate issuer and audience
 in the Authorization header.
 
@@ -44,4 +44,4 @@ In order to run the sample with [Docker](https://www.docker.com/) you need to ad
 to the `.env` filed as explained [previously](#running-the-example) and then
 
 1. Execute in command line `sh exec.sh` to run the Docker in Linux, or `.\exec.ps1` to run the Docker in Windows.
-2. Try calling [http://localhost:3001/ping](http://localhost:3001/ping)
+2. Try calling [http://localhost:3010/ping](http://localhost:3010/ping)
