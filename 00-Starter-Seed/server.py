@@ -70,10 +70,11 @@ def requires_scope(required_scope):
     """
     token = get_token_auth_header()
     unverified_claims = jwt.get_unverified_claims(token)
-    token_scopes = unverified_claims["scope"].split()
-    for token_scope in token_scopes:
-        if token_scope == required_scope:
-            return True
+    if unverified_claims.get("scope"):
+        token_scopes = unverified_claims["scope"].split()
+        for token_scope in token_scopes:
+            if token_scope == required_scope:
+                return True
     return False
 
 
