@@ -1,5 +1,5 @@
 flask
 python-dotenv
-python-jose
+python-jose-cryptodome
 flask-cors
 six
