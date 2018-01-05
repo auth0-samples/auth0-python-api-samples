@@ -7,7 +7,7 @@ from os import environ as env
 from six.moves.urllib.request import urlopen
 
 from dotenv import load_dotenv, find_dotenv
-from flask import Flask, request, jsonify, _app_ctx_stack
+from flask import Flask, request, jsonify, _request_ctx_stack
 from flask_cors import cross_origin
 from jose import jwt
 
@@ -131,7 +131,7 @@ def requires_auth(f):
                                     "Unable to parse authentication"
                                     " token."}, 400)
 
-            _app_ctx_stack.top.current_user = payload
+            _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
                         "description": "Unable to find appropriate key"}, 400)
@@ -139,34 +139,40 @@ def requires_auth(f):
 
 
 # Controllers API
-@APP.route("/ping")
+@APP.route("/api/public")
 @cross_origin(headers=["Content-Type", "Authorization"])
 def ping():
     """No access token required to access this route
     """
-    return "All good. You don't need to be authenticated to call this"
+    response = "All good. You don't need to be authenticated to call this"
+    return jsonify(message=response)
 
 
-@APP.route("/secured/ping")
+@APP.route("/api/private")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
 def secured_ping():
     """A valid access token is required to access this route
     """
-    return "All good. You only get this message if you're authenticated"
+    response = "All good. You only get this message if you're authenticated"
+    return jsonify(message=response)
 
 
-@APP.route("/secured/private/ping")
+@APP.route("/api/private-scoped")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
 def secured_private_ping():
     """A valid access token and an appropriate scope are required to access this route
     """
-    if requires_scope("read:agenda"):
-        return "All good. You're authenticated and the access token has the appropriate scope"
-    return "You don't have access to this resource"
+    if requires_scope("read:messages"):
+        response = "All good. You're authenticated and the access token has the appropriate scope"
+        return jsonify(message=response)
+    raise AuthError({
+        "code": "Anauthorized",
+        "desciption": "You don't have access to this resource"
+    }, 403)
 
 
 if __name__ == "__main__":
