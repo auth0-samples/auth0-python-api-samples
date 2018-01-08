@@ -141,7 +141,7 @@ def requires_auth(f):
 # Controllers API
 @APP.route("/api/public")
 @cross_origin(headers=["Content-Type", "Authorization"])
-def ping():
+def public():
     """No access token required to access this route
     """
     response = "All good. You don't need to be authenticated to call this"
@@ -152,7 +152,7 @@ def ping():
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
-def secured_ping():
+def private():
     """A valid access token is required to access this route
     """
     response = "All good. You only get this message if you're authenticated"
@@ -163,7 +163,7 @@ def secured_ping():
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
-def secured_private_ping():
+def private_scoped():
     """A valid access token and an appropriate scope are required to access this route
     """
     if requires_scope("read:messages"):
