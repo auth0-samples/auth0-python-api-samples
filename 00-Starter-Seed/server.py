@@ -129,12 +129,12 @@ def requires_auth(f):
                 raise AuthError({"code": "invalid_header",
                                 "description":
                                     "Unable to parse authentication"
-                                    " token."}, 400)
+                                    " token."}, 401)
 
             _request_ctx_stack.top.current_user = payload
             return f(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
-                        "description": "Unable to find appropriate key"}, 400)
+                        "description": "Unable to find appropriate key"}, 401)
     return decorated
 
 
@@ -144,7 +144,7 @@ def requires_auth(f):
 def public():
     """No access token required to access this route
     """
-    response = "All good. You don't need to be authenticated to call this"
+    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
     return jsonify(message=response)
 
 
@@ -155,7 +155,7 @@ def public():
 def private():
     """A valid access token is required to access this route
     """
-    response = "All good. You only get this message if you're authenticated"
+    response = "Hello from a private endpoint! You need to be authenticated to see this."
     return jsonify(message=response)
 
 
@@ -167,11 +167,11 @@ def private_scoped():
     """A valid access token and an appropriate scope are required to access this route
     """
     if requires_scope("read:messages"):
-        response = "All good. You're authenticated and the access token has the appropriate scope"
+        response = "Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this."
         return jsonify(message=response)
     raise AuthError({
-        "code": "Anauthorized",
-        "desciption": "You don't have access to this resource"
+        "code": "Unauthorized",
+        "description": "You don't have access to this resource"
     }, 403)
 
 
