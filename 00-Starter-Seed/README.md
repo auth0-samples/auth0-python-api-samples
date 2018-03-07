@@ -11,7 +11,7 @@ Please check our [Quickstart](https://auth0.com/docs/quickstart/backend/python) 
 In order to run the example you need to have `python` and `pip` installed.
 
 You also need to set your Auth0 Domain and the API's audience as environment variables with the following names
-respectively: `AUTH0_DOMAIN` and `AUTH0_AUDIENCE`, which is the audience of your API. You can find an example in the
+respectively: `AUTH0_DOMAIN` and `API_IDENTIFIER`, which is the audience of your API. You can find an example in the
 `env.example` file.
 
 For that, if you just create a file named `.env` in the directory and set the values like the following,
@@ -20,7 +20,7 @@ the app will just work:
 ```bash
 # .env file
 AUTH0_DOMAIN=example.auth0.com
-AUTH0_AUDIENCE=YOUR_API_AUDIENCE
+API_IDENTIFIER={API_IDENTIFIER}
 ```
 
 Once you've set those 2 environment variables:

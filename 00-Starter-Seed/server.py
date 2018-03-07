@@ -15,7 +15,7 @@ ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 AUTH0_DOMAIN = env.get("AUTH0_DOMAIN")
-AUTH0_AUDIENCE = env.get("AUTH0_AUDIENCE")
+API_IDENTIFIER = env.get("API_IDENTIFIER")
 ALGORITHMS = ["RS256"]
 APP = Flask(__name__)
 
@@ -114,7 +114,7 @@ def requires_auth(f):
                     token,
                     rsa_key,
                     algorithms=ALGORITHMS,
-                    audience=AUTH0_AUDIENCE,
+                    audience=API_IDENTIFIER,
                     issuer="https://"+AUTH0_DOMAIN+"/"
                 )
             except jwt.ExpiredSignatureError:
