@@ -9,15 +9,26 @@ from six.moves.urllib.request import urlopen
 from dotenv import load_dotenv, find_dotenv
 from flask import Flask, request, jsonify, _request_ctx_stack
 from flask_cors import cross_origin
-from jose import jwt
+from jose import jwt, jws
+from flask_caching import Cache
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
     load_dotenv(ENV_FILE)
 AUTH0_DOMAIN = env.get("AUTH0_DOMAIN")
-AUTH0_AUDIENCE = env.get("AUTH0_AUDIENCE")
+API_IDENTIFIER = env.get("API_IDENTIFIER")
+AUTH0_ISSUER = "https://" + AUTH0_DOMAIN + "/"
+AUTH0_JWKS = "https://" + AUTH0_DOMAIN + "/.well-known/jwks.json"
 ALGORITHMS = ["RS256"]
-APP = Flask(__name__)
+
+app = Flask(__name__)
+
+config = {
+    'CACHE_TYPE': 'simple',
+    'CACHE_DEFAULT_TIMEOUT': 0
+}
+
+cache = Cache(app, config=config)
 
 
 # Format error response and append status code.
@@ -27,11 +38,55 @@ class AuthError(Exception):
         self.status_code = status_code
 
 
-@APP.errorhandler(AuthError)
+@app.errorhandler(AuthError)
 def handle_auth_error(ex):
     response = jsonify(ex.error)
     response.status_code = ex.status_code
     return response
+
+
+def get_public_key(token):
+    """Obtain the public key from JWKS
+    Args:
+        token: Bearer token
+    Returns:
+        dict: A dictionary with JWK
+    """
+    rsa_key = cache.get('rsa_key')
+    if rsa_key is not None:
+        return rsa_key
+
+    jwks_url = urlopen(AUTH0_JWKS)
+    jwks = json.loads(jwks_url.read())
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except jwt.JWTError:
+        raise AuthError({"code": "invalid_header",
+                         "description":
+                             "Invalid header. "
+                             "Use an RS256 signed JWT Access Token"}, 401)
+    if unverified_header["alg"] == "HS256":
+        raise AuthError({"code": "invalid_header",
+                         "description":
+                             "Invalid header. "
+                             "Use an RS256 signed JWT Access Token"}, 401)
+    rsa_key = {}
+    for key in jwks["keys"]:
+        if key["kid"] == unverified_header["kid"]:
+            rsa_key = {
+                "kty": key["kty"],
+                "kid": key["kid"],
+                "use": key["use"],
+                "n": key["n"],
+                "e": key["e"]
+            }
+
+    if rsa_key:
+        cache.set('rsa_key', rsa_key)
+        return rsa_key
+    else:
+        raise AuthError({"code": "invalid_header",
+                         "description": "Unable to find appropriate key"}, 401)
 
 
 def get_token_auth_header():
@@ -78,68 +133,62 @@ def requires_scope(required_scope):
     return False
 
 
+def decode_jwt(token, rsa_key):
+    try:
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=ALGORITHMS,
+            audience=API_IDENTIFIER,
+            issuer=AUTH0_ISSUER
+        )
+    except jwt.ExpiredSignatureError:
+        raise AuthError({"code": "token_expired",
+                         "description": "token is expired"}, 401)
+    except jwt.JWTClaimsError:
+        raise AuthError({"code": "invalid_claims",
+                         "description":
+                             "incorrect claims,"
+                             " please check the audience and issuer"}, 401)
+    except jwt.JWTError as ex:
+        raise AuthError({"code": "invalid_token",
+                         "description": "The signature is invalid "}, 401)
+    except Exception:
+        raise AuthError({"code": "invalid_header",
+                         "description":
+                             "Unable to parse authentication"
+                             " token."}, 401)
+    return payload
+
+
 def requires_auth(f):
     """Determines if the access token is valid
     """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
-        jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
-        jwks = json.loads(jsonurl.read())
-        try:
-            unverified_header = jwt.get_unverified_header(token)
-        except jwt.JWTError:
-            raise AuthError({"code": "invalid_header",
-                            "description":
-                                "Invalid header. "
-                                "Use an RS256 signed JWT Access Token"}, 401)
-        if unverified_header["alg"] == "HS256":
-            raise AuthError({"code": "invalid_header",
-                            "description":
-                                "Invalid header. "
-                                "Use an RS256 signed JWT Access Token"}, 401)
-        rsa_key = {}
-        for key in jwks["keys"]:
-            if key["kid"] == unverified_header["kid"]:
-                rsa_key = {
-                    "kty": key["kty"],
-                    "kid": key["kid"],
-                    "use": key["use"],
-                    "n": key["n"],
-                    "e": key["e"]
-                }
-        if rsa_key:
-            try:
-                payload = jwt.decode(
-                    token,
-                    rsa_key,
-                    algorithms=ALGORITHMS,
-                    audience=AUTH0_AUDIENCE,
-                    issuer="https://"+AUTH0_DOMAIN+"/"
-                )
-            except jwt.ExpiredSignatureError:
-                raise AuthError({"code": "token_expired",
-                                "description": "token is expired"}, 401)
-            except jwt.JWTClaimsError:
-                raise AuthError({"code": "invalid_claims",
-                                "description":
-                                    "incorrect claims,"
-                                    " please check the audience and issuer"}, 401)
-            except Exception:
-                raise AuthError({"code": "invalid_header",
-                                "description":
-                                    "Unable to parse authentication"
-                                    " token."}, 401)
 
+        rsa_key = cache.get('rsa_key')
+
+        if rsa_key is not None:
+            try:
+                jws.verify(token, rsa_key, ALGORITHMS)
+            except jws.JWSError:
+                rsa_key = get_public_key(token)
+
+            payload = decode_jwt(token, rsa_key)
             _request_ctx_stack.top.current_user = payload
-            return f(*args, **kwargs)
-        raise AuthError({"code": "invalid_header",
-                        "description": "Unable to find appropriate key"}, 401)
+        else:
+            rsa_key = get_public_key(token)
+            payload = decode_jwt(token, rsa_key)
+            _request_ctx_stack.top.current_user = payload
+
+        return f(*args, **kwargs)
     return decorated
 
 
 # Controllers API
-@APP.route("/api/public")
+@app.route("/api/public")
 @cross_origin(headers=["Content-Type", "Authorization"])
 def public():
     """No access token required to access this route
@@ -148,7 +197,7 @@ def public():
     return jsonify(message=response)
 
 
-@APP.route("/api/private")
+@app.route("/api/private")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
@@ -159,7 +208,7 @@ def private():
     return jsonify(message=response)
 
 
-@APP.route("/api/private-scoped")
+@app.route("/api/private-scoped")
 @cross_origin(headers=["Content-Type", "Authorization"])
 @cross_origin(headers=["Access-Control-Allow-Origin", "*"])
 @requires_auth
@@ -176,4 +225,4 @@ def private_scoped():
 
 
 if __name__ == "__main__":
-    APP.run(host="0.0.0.0", port=env.get("PORT", 3010))
+    app.run(host="0.0.0.0", port=env.get("PORT", 3010))
