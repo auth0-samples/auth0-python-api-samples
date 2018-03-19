@@ -45,15 +45,17 @@ def handle_auth_error(ex):
     return response
 
 
-def get_public_key(token):
+def get_public_key(token, get_from_cache=True):
     """Obtain the public key from JWKS
     Args:
-        token: Bearer token
+        token (str): Bearer token
+        get_from_cache (Boolean): If It's True get public key from cache,
+                                  otherwise fetch from JWKS
     Returns:
         dict: A dictionary with JWK
     """
     rsa_key = cache.get('rsa_key')
-    if rsa_key is not None:
+    if rsa_key is not None and get_from_cache:
         return rsa_key
 
     jwks_url = urlopen(AUTH0_JWKS)
@@ -150,7 +152,7 @@ def decode_jwt(token, rsa_key):
                          "description":
                              "incorrect claims,"
                              " please check the audience and issuer"}, 401)
-    except jwt.JWTError as ex:
+    except jwt.JWTError:
         raise AuthError({"code": "invalid_token",
                          "description": "The signature is invalid "}, 401)
     except Exception:
