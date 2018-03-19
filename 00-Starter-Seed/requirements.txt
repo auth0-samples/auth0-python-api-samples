@@ -3,5 +3,4 @@ python-dotenv
 python-jose-cryptodome
 flask-cors
 six
-python-memcached
 flask_caching
