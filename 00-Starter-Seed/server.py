@@ -155,6 +155,9 @@ def decode_jwt(token, rsa_key):
     except jwt.JWTError:
         raise AuthError({"code": "invalid_token",
                          "description": "The signature is invalid "}, 401)
+    except jwt.JWSError:
+        raise AuthError({"code": "invalid_certificate",
+                         "description": "The certificate is invalid "}, 401)
     except Exception:
         raise AuthError({"code": "invalid_header",
                          "description":
@@ -169,21 +172,20 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
+        rsa_key = get_public_key(token)
+        
+        # Try to decode with the cached JWKS key. 
+        # If it fails, it could be because the JWKS key expired, so we retrieve it 
+        # from the JWKS endpoint and try decoding again.
+        
+        try:
+        payload = decode_jwt(token, rsa_key)
+        except jws.AuthError as error:
+            if error.code == "invalid_certificate":         
+                rsa_key = get_public_key(token, False)
+                payload = decode_jwt(token, rsa_key)
 
-        rsa_key = cache.get('rsa_key')
-
-        if rsa_key is not None:
-            try:
-                jws.verify(token, rsa_key, ALGORITHMS)
-            except jws.JWSError:
-                rsa_key = get_public_key(token)
-
-            payload = decode_jwt(token, rsa_key)
-            _request_ctx_stack.top.current_user = payload
-        else:
-            rsa_key = get_public_key(token)
-            payload = decode_jwt(token, rsa_key)
-            _request_ctx_stack.top.current_user = payload
+        _request_ctx_stack.top.current_user = payload
 
         return f(*args, **kwargs)
     return decorated
