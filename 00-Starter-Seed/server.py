@@ -9,7 +9,7 @@ from six.moves.urllib.request import urlopen
 from dotenv import load_dotenv, find_dotenv
 from flask import Flask, request, jsonify, _request_ctx_stack
 from flask_cors import cross_origin
-from jose import jwt, jws
+from jose import jwt
 from flask_caching import Cache
 
 ENV_FILE = find_dotenv()
@@ -153,11 +153,8 @@ def decode_jwt(token, rsa_key):
                              "incorrect claims,"
                              " please check the audience and issuer"}, 401)
     except jwt.JWTError:
-        raise AuthError({"code": "invalid_token",
-                         "description": "The signature is invalid "}, 401)
-    except jwt.JWSError:
-        raise AuthError({"code": "invalid_certificate",
-                         "description": "The certificate is invalid "}, 401)
+        raise AuthError({"code": "invalid_signature",
+                         "description": "The signature is invalid"}, 401)
     except Exception:
         raise AuthError({"code": "invalid_header",
                          "description":
@@ -173,15 +170,15 @@ def requires_auth(f):
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
         rsa_key = get_public_key(token)
-        
-        # Try to decode with the cached JWKS key. 
-        # If it fails, it could be because the JWKS key expired, so we retrieve it 
+
+        # Try to decode with the cached JWKS key.
+        # If it fails, it could be because the JWKS key expired, so we retrieve it
         # from the JWKS endpoint and try decoding again.
-        
+
         try:
-        payload = decode_jwt(token, rsa_key)
-        except jws.AuthError as error:
-            if error.code == "invalid_certificate":         
+            payload = decode_jwt(token, rsa_key)
+        except AuthError as ex:
+            if ex.error["code"] == "invalid_signature":
                 rsa_key = get_public_key(token, False)
                 payload = decode_jwt(token, rsa_key)
 
