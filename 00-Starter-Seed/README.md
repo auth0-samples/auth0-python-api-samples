@@ -47,3 +47,12 @@ to the `.env` filed as explained [previously](#running-the-example) and then
 
 1. Execute in command line `sh exec.sh` to run the Docker in Linux, or `.\exec.ps1` to run the Docker in Windows.
 2. Try calling [http://localhost:3010/api/public](http://localhost:3010/api/public)
+
+# Running the tests
+
+In order to run the tests you need to setup the environment variables as explained [previously](#running-the-example) and then
+
+1. Install the needed dependencies with `pip install -r requirements.txt`
+2. Run the tests with `python -m unittest tests.test`
+
+__note__: In earlier versions of python 3.3 `mock` isn't part of `unittest`, so you need to install it from [PyPI](https://pypi.org/project/mock/)
