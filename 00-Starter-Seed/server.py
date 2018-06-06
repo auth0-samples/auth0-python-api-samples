@@ -150,7 +150,7 @@ def public():
 
 @APP.route("/api/private")
 @cross_origin(headers=["Content-Type", "Authorization"])
-@cross_origin(headers=["Access-Control-Allow-Origin", "*"])
+@cross_origin(headers=["Access-Control-Allow-Origin", "http://localhost:3000"])
 @requires_auth
 def private():
     """A valid access token is required to access this route
@@ -161,7 +161,7 @@ def private():
 
 @APP.route("/api/private-scoped")
 @cross_origin(headers=["Content-Type", "Authorization"])
-@cross_origin(headers=["Access-Control-Allow-Origin", "*"])
+@cross_origin(headers=["Access-Control-Allow-Origin", "http://localhost:3000"])
 @requires_auth
 def private_scoped():
     """A valid access token and an appropriate scope are required to access this route
