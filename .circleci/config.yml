@@ -1,17 +1,17 @@
+# Common Logic
 defaults: &defaults
     steps:
       - attach_workspace:
           at: ~/
       - run:
-          name: Replace Auth0 test credentials
-          command: |
+          name: Prepare environment variables
+          command: | 
             cd $AUTH0_CFG
             mv .env.example .env
             sed -i 's/{CLIENT_ID}/'$client_id_scopes_none'/g' .env
             sed -i 's/{CLIENT_SECRET}/'$client_secret_scopes_none'/g' .env
             sed -i 's/{DOMAIN}/'$auth0_domain'/g' .env
             sed -i 's/{API_IDENTIFIER}/'$api_identifier'/g' .env
-            head .env
       - run:
           name: Background Server
           command: cd $AUTH0_CFG && sh exec.sh
@@ -19,7 +19,7 @@ defaults: &defaults
       - run:
           name: Wait until server is online 
           command: |
-            until $(curl --output /dev/null --fail http://localhost:3010/api/public); do
+            until $(curl --silent --head --output /dev/null --fail http://localhost:3010/api/public); do
                 sleep 5
             done
       - run:
@@ -38,7 +38,6 @@ defaults: &defaults
             echo "AUTH0_CLIENT_SECRET_4=$client_secret_scopes_readwrite" >> .env
             echo "API_URL=http://localhost:3010" >> .env
             npm install
-            head .env
       - run:
           name: Execute automated tests
           command: cd test && npm test       
@@ -49,7 +48,9 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: git clone https://github.com/auth0-samples/api-quickstarts-tests test
+      - run:
+          name: Clone test script
+          command: git clone https://github.com/auth0-samples/api-quickstarts-tests test
       - persist_to_workspace:
           root: ~/ 
           paths:
@@ -61,7 +62,6 @@ jobs:
       - AUTH0_CFG: 00-Starter-Seed
       - SAMPLE_PATH: 00-Starter-Seed
     <<: *defaults
-    
 workflows:
   version: 2
   API-Tests:
