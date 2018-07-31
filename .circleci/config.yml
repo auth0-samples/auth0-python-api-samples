@@ -8,8 +8,8 @@ defaults: &defaults
           command: | 
             cd $AUTH0_CFG
             mv .env.example .env
-            sed -i 's/{DOMAIN}/'$auth0_domain'/g' .env
-            sed -i 's/{API_IDENTIFIER}/'$api_identifier'/g' .env
+            sed -i 's|{DOMAIN}|'$auth0_domain'|g' .env
+            sed -i 's|{API_IDENTIFIER}|'$api_identifier'|g' .env
       - run:
           name: Background Server
           command: cd $AUTH0_CFG && sh exec.sh
