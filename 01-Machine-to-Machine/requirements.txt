@@ -1,0 +1,4 @@
+flask
+python-dotenv
+auth0-python
+flask-jwt-simple[asymmetric_crypto]
