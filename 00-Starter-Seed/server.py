@@ -84,7 +84,12 @@ def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
+        
+        #For production environments, make sure to cache this file, as it is rate limited.
+        #See more: https://auth0.com/docs/tokens/guides/jwt/verify-jwt-signature-using-jwks
         jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+        
+        
         jwks = json.loads(jsonurl.read())
         try:
             unverified_header = jwt.get_unverified_header(token)
