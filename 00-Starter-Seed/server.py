@@ -22,6 +22,9 @@ APP = Flask(__name__)
 
 # Format error response and append status code.
 class AuthError(Exception):
+    """
+    An AuthError is raised whenever the authentication failed.
+    """
     def __init__(self, error, status_code):
         super().__init__()
         self.error = error
