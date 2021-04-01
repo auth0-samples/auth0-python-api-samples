@@ -89,11 +89,11 @@ def requires_auth(func):
         jwks = json.loads(jsonurl.read())
         try:
             unverified_header = jwt.get_unverified_header(token)
-        except jwt.JWTError:
+        except jwt.JWTError as jwt_error:
             raise AuthError({"code": "invalid_header",
                             "description":
                                 "Invalid header. "
-                                "Use an RS256 signed JWT Access Token"}, 401)
+                                "Use an RS256 signed JWT Access Token"}, 401) from jwt_error
         if unverified_header["alg"] == "HS256":
             raise AuthError({"code": "invalid_header",
                             "description":
@@ -118,19 +118,19 @@ def requires_auth(func):
                     audience=API_IDENTIFIER,
                     issuer="https://"+AUTH0_DOMAIN+"/"
                 )
-            except jwt.ExpiredSignatureError:
+            except jwt.ExpiredSignatureError as expired_sign_error:
                 raise AuthError({"code": "token_expired",
-                                "description": "token is expired"}, 401)
-            except jwt.JWTClaimsError:
+                                "description": "token is expired"}, 401) from expired_sign_error
+            except jwt.JWTClaimsError as jwt_claims_error:
                 raise AuthError({"code": "invalid_claims",
                                 "description":
                                     "incorrect claims,"
-                                    " please check the audience and issuer"}, 401)
-            except Exception:
+                                    " please check the audience and issuer"}, 401) from jwt_claims_error
+            except Exception as exc:
                 raise AuthError({"code": "invalid_header",
                                 "description":
                                     "Unable to parse authentication"
-                                    " token."}, 401)
+                                    " token."}, 401) from exc
 
             _request_ctx_stack.top.current_user = payload
             return func(*args, **kwargs)
