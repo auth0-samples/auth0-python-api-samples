@@ -33,6 +33,11 @@ class AuthError(Exception):
 
 @APP.errorhandler(AuthError)
 def handle_auth_error(ex):
+    """
+    serializes the given AuthError as json and sets the response status code accordingly.
+    :param ex: an auth error
+    :return: json serialized ex response
+    """
     response = jsonify(ex.error)
     response.status_code = ex.status_code
     return response
