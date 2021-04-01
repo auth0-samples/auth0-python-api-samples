@@ -79,10 +79,10 @@ def requires_scope(required_scope):
     return False
 
 
-def requires_auth(f):
+def requires_auth(func):
     """Determines if the access token is valid
     """
-    @wraps(f)
+    @wraps(func)
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
         jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
@@ -133,7 +133,7 @@ def requires_auth(f):
                                     " token."}, 401)
 
             _request_ctx_stack.top.current_user = payload
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
                         "description": "Unable to find appropriate key"}, 401)
     return decorated
