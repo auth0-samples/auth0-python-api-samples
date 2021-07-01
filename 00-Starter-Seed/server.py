@@ -4,10 +4,12 @@
 from functools import wraps
 import json
 from os import environ as env
+from typing import Dict
+
 from six.moves.urllib.request import urlopen
 
 from dotenv import load_dotenv, find_dotenv
-from flask import Flask, request, jsonify, _request_ctx_stack
+from flask import Flask, request, jsonify, _request_ctx_stack, Response
 from flask_cors import cross_origin
 from jose import jwt
 
@@ -25,6 +27,7 @@ class AuthError(Exception):
     """
     An AuthError is raised whenever the authentication failed.
     """
+    def __init__(self, error: Dict[str, str], status_code: int):
     def __init__(self, error, status_code):
         super().__init__()
         self.error = error
@@ -32,7 +35,7 @@ class AuthError(Exception):
 
 
 @APP.errorhandler(AuthError)
-def handle_auth_error(ex):
+def handle_auth_error(ex: AuthError) -> Response:
     """
     serializes the given AuthError as json and sets the response status code accordingly.
     :param ex: an auth error
@@ -43,14 +46,14 @@ def handle_auth_error(ex):
     return response
 
 
-def get_token_auth_header():
+def get_token_auth_header() -> str:
     """Obtains the access token from the Authorization Header
     """
     auth = request.headers.get("Authorization", None)
     if not auth:
         raise AuthError({"code": "authorization_header_missing",
-                        "description":
-                            "Authorization header is expected"}, 401)
+                         "description":
+                             "Authorization header is expected"}, 401)
 
     parts = auth.split()
 
@@ -64,15 +67,15 @@ def get_token_auth_header():
                         "description": "Token not found"}, 401)
     if len(parts) > 2:
         raise AuthError({"code": "invalid_header",
-                        "description":
-                            "Authorization header must be"
-                            " Bearer token"}, 401)
+                         "description":
+                             "Authorization header must be"
+                             " Bearer token"}, 401)
 
     token = parts[1]
     return token
 
 
-def requires_scope(required_scope):
+def requires_scope(required_scope: str) -> bool:
     """Determines if the required scope is present in the access token
     Args:
         required_scope (str): The scope required to access the resource
@@ -90,10 +93,11 @@ def requires_scope(required_scope):
 def requires_auth(func):
     """Determines if the access token is valid
     """
+    
     @wraps(func)
     def decorated(*args, **kwargs):
         token = get_token_auth_header()
-        jsonurl = urlopen("https://"+AUTH0_DOMAIN+"/.well-known/jwks.json")
+        jsonurl = urlopen("https://" + AUTH0_DOMAIN + "/.well-known/jwks.json")
         jwks = json.loads(jsonurl.read())
         try:
             unverified_header = jwt.get_unverified_header(token)
@@ -104,9 +108,9 @@ def requires_auth(func):
                                 "Use an RS256 signed JWT Access Token"}, 401) from jwt_error
         if unverified_header["alg"] == "HS256":
             raise AuthError({"code": "invalid_header",
-                            "description":
-                                "Invalid header. "
-                                "Use an RS256 signed JWT Access Token"}, 401)
+                             "description":
+                                 "Invalid header. "
+                                 "Use an RS256 signed JWT Access Token"}, 401)
         rsa_key = {}
         for key in jwks["keys"]:
             if key["kid"] == unverified_header["kid"]:
@@ -124,7 +128,7 @@ def requires_auth(func):
                     rsa_key,
                     algorithms=ALGORITHMS,
                     audience=API_IDENTIFIER,
-                    issuer="https://"+AUTH0_DOMAIN+"/"
+                    issuer="https://" + AUTH0_DOMAIN + "/"
                 )
             except jwt.ExpiredSignatureError as expired_sign_error:
                 raise AuthError({"code": "token_expired",
@@ -143,7 +147,8 @@ def requires_auth(func):
             _request_ctx_stack.top.current_user = payload
             return func(*args, **kwargs)
         raise AuthError({"code": "invalid_header",
-                        "description": "Unable to find appropriate key"}, 401)
+                         "description": "Unable to find appropriate key"}, 401)
+
     return decorated
 
 
