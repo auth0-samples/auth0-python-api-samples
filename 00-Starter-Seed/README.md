@@ -8,7 +8,7 @@ Please check our [Quickstart](https://auth0.com/docs/quickstart/backend/python) 
 
 # Running the example
 
-In order to run the example you need to have `python` and `pip` installed.
+In order to run the example you need to have `python 3` and `pip` installed.
 
 You also need to set your Auth0 Domain and the API's audience as environment variables with the following names
 respectively: `AUTH0_DOMAIN` and `API_IDENTIFIER`, which is the audience of your API. You can find an example in the

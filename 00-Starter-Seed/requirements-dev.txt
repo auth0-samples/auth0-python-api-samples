@@ -1,0 +1,6 @@
+-r requirements.txt
+black==22.1.0
+flake8==4.0.1
+jwcrypto==1.0
+pytest==7.1.0
+pytest-mock==3.7.0

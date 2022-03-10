@@ -1,5 +1,4 @@
-flask
-python-dotenv
-python-jose
-flask-cors
-six
+Flask==2.0.3
+python-dotenv==0.19.2
+Flask-Cors==3.0.10
+Authlib==1.0.0
