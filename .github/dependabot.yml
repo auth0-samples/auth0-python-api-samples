@@ -1,7 +1,9 @@
 version: 2
 updates:
-- package-ecosystem: pip
-  directory: "/00-Starter-Seed"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
+  - package-ecosystem: "pip" 
+    directory: "//00-Starter-Seed"
+    schedule:
+      interval: "daily"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
