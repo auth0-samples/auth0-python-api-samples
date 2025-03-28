@@ -11,7 +11,7 @@ from six.moves.urllib.request import urlopen
 from dotenv import load_dotenv, find_dotenv
 from flask import Flask, request, jsonify, _request_ctx_stack, Response
 from flask_cors import cross_origin
-from jose import jwt
+import jwt
 
 ENV_FILE = find_dotenv()
 if ENV_FILE:
@@ -80,7 +80,7 @@ def requires_scope(required_scope: str) -> bool:
         required_scope (str): The scope required to access the resource
     """
     token = get_token_auth_header()
-    unverified_claims = jwt.get_unverified_claims(token)
+    unverified_claims = jwt.decode(token, options={"verify_signature": False})
     if unverified_claims.get("scope"):
         token_scopes = unverified_claims["scope"].split()
         for token_scope in token_scopes:
@@ -100,7 +100,7 @@ def requires_auth(func):
         jwks = json.loads(jsonurl.read())
         try:
             unverified_header = jwt.get_unverified_header(token)
-        except jwt.JWTError as jwt_error:
+        except jwt.PyJWTError as jwt_error:
             raise AuthError({"code": "invalid_header",
                             "description":
                                 "Invalid header. "
@@ -110,21 +110,15 @@ def requires_auth(func):
                              "description":
                                  "Invalid header. "
                                  "Use an RS256 signed JWT Access Token"}, 401)
-        rsa_key = {}
-        for key in jwks["keys"]:
-            if key["kid"] == unverified_header["kid"]:
-                rsa_key = {
-                    "kty": key["kty"],
-                    "kid": key["kid"],
-                    "use": key["use"],
-                    "n": key["n"],
-                    "e": key["e"]
-                }
-        if rsa_key:
+        public_key = None
+        for jwk in jwks["keys"]:
+            if jwk["kid"] == unverified_header["kid"]:
+                public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(jwk))
+        if public_key:
             try:
                 payload = jwt.decode(
                     token,
-                    rsa_key,
+                    public_key,
                     algorithms=ALGORITHMS,
                     audience=API_IDENTIFIER,
                     issuer="https://" + AUTH0_DOMAIN + "/"
@@ -132,11 +126,16 @@ def requires_auth(func):
             except jwt.ExpiredSignatureError as expired_sign_error:
                 raise AuthError({"code": "token_expired",
                                 "description": "token is expired"}, 401) from expired_sign_error
-            except jwt.JWTClaimsError as jwt_claims_error:
-                raise AuthError({"code": "invalid_claims",
+            except jwt.InvalidAudienceError as jwt_audience_error:
+                raise AuthError({"code": "invalid_audience",
                                 "description":
-                                    "incorrect claims,"
-                                    " please check the audience and issuer"}, 401) from jwt_claims_error
+                                    "incorrect audience,"
+                                    " please check the audience"}, 401) from jwt_audience_error
+            except jwt.InvalidIssuerError as jwt_issuer_error:
+                raise AuthError({"code": "invalid_issuer",
+                                "description":
+                                    "incorrect issuer,"
+                                    " please check the issuer"}, 401) from jwt_issuer_error
             except Exception as exc:
                 raise AuthError({"code": "invalid_header",
                                 "description":

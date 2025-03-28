@@ -1,5 +1,5 @@
-flask
+flask==2.3.3
 python-dotenv
-python-jose
+pyjwt
 flask-cors
 six
